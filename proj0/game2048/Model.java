@@ -5,7 +5,7 @@ import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author TODO: zyw
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -106,11 +106,71 @@ public class Model extends Observable {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
+    public boolean eachColUp(int col) {
+        boolean changed;
+        changed = false;
+        boolean[] eachTile = new boolean[board.size()];
+        for (int row = board.size() - 2; row >= 0; row -= 1) {
+            if (board.tile(col, row) == null)
+                continue;
+            for (int r = row + 1; r < board.size(); r += 1) {
+                boolean[] eachTileCanMove = new  boolean[board.size()];
+                if (board.tile(col,r) == null) {
+                    if (r == board.size() - 1) {
+                        board.move(col, r, board.tile(col, row));
+                        changed = true;
+                        return changed;
+                    }
+                    eachTileCanMove[r] = true;
+                    continue;
+                }
+
+                if (board.tile(col, row).value() == board.tile(col, r).value()) {
+                    if (eachTile[r]) {
+                        board.move(col, r, board.tile(col, row));
+                        score += board.tile(col, row).value() * 2;
+                        changed = true;
+                        eachTile[r] = false;
+                        return changed;
+                    }
+                    for (int i = r - 1; i > row; i -= 1) {
+                        if (eachTileCanMove[i]) {
+                            board.move(col, i, board.tile(col, row));
+                            changed = true;
+                            return changed;
+                        }
+                        return changed;
+                    }
+                }
+                if (board.tile(col, row).value() != board.tile(col, r).value()) {
+                    return changed;
+                }
+            }
+        }
+    }
+
+    public boolean north () {
+        boolean[] changed = new boolean[board.size()];
+        for (int col = 0; col < board.size(); col += 1) {
+            changed[col] = eachColUp(col);
+        }
+        for (boolean i: changed) {
+            if (i)
+                return true;
+            return false;
+        }
+    }
+
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
 
         // TODO: Modify this.board (and perhaps this.score) to account
+
+
+        for (int col; col < board.size(); col += 1) {
+            eachColUp(col);
+        }
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
 
@@ -138,6 +198,14 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i += 1) {
+            for (int j = 0; j < b.size(); j += 1) {
+                if (b.tile(i, j) == null)
+                    return true;
+                else
+                    continue;
+            }
+        }
         return false;
     }
 
@@ -148,6 +216,14 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i += 1) {
+            for (int j = 0; j < b.size(); j += 1) {
+                if (b.tile(i, j) != null && b.tile(i, j).value() == MAX_PIECE)
+                    return true;
+                else
+                    continue;
+            }
+        }
         return false;
     }
 
@@ -159,9 +235,23 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        if (emptySpaceExists(b))
+            return true;
+        for (int row = 0; row < b.size(); row += 1) {
+            for (int col = 0; col < b.size(); col += 1) {
+                if (col + 1 > b.size() - 1)
+                    continue;
+                if (b.tile(col, row).value() == b.tile(col + 1, row).value())
+                    return true;
+                if (row + 1 > b.size() - 1)
+                    continue;
+                if (b.tile(col, row).value() == b.tile(col, row + 1).value())
+                    return true;
+                continue;
+            }
+        }
         return false;
     }
-
 
     @Override
      /** Returns the model as a string, used for debugging. */
